@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rust:
+    name: Rust checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Formatting
+        run: cargo fmt --all --check
+      - name: Lints
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+      - name: Tests
+        run: cargo test --workspace --all-targets --all-features
+
+  web:
+    name: WebAssembly and frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install wasm-pack
+        run: cargo install wasm-pack --locked --version 0.15.0
+      - name: Install JavaScript dependencies
+        run: npm ci
+      - name: Build WebAssembly
+        run: npm run build:wasm
+      - name: Frontend tests
+        run: npm --workspace frontend run test
+      - name: Production bundle
+        run: npm --workspace frontend run build

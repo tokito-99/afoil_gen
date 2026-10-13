@@ -1,0 +1,17 @@
+{
+  "name": "afoil_gen",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "frontend"
+  ],
+  "scripts": {
+    "build": "npm run build:wasm && npm --workspace frontend run build",
+    "build:wasm": "wasm-pack build crates/mesh-wasm --target web --release --out-dir ../../frontend/src/wasm-pkg",
+    "dev": "npm run build:wasm && npm --workspace frontend run dev",
+    "lint": "npm --workspace frontend run lint",
+    "preview": "npm --workspace frontend run preview",
+    "test": "npm run build:wasm && npm --workspace frontend run test",
+    "typecheck": "npm --workspace frontend run typecheck"
+  }
+}

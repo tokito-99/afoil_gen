@@ -1,0 +1,41 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install wasm-pack
+        run: cargo install wasm-pack --locked --version 0.15.0
+      - name: Build and test Rust workspace
+        run: cargo test --workspace --all-targets --all-features
+      - name: Build release CLI
+        run: cargo build --release -p mesh-cli
+      - name: Build web application
+        run: npm ci && npm run build
+      - name: Package artifacts
+        run: |
+          tar -czf "afoil_gen-cli-${GITHUB_REF_NAME}-linux-x86_64.tar.gz" \
+            target/release/mesh-cli README.md CHANGELOG.md LICENSE-MIT LICENSE-APACHE examples docs
+          tar -czf "afoil_gen-web-${GITHUB_REF_NAME}.tar.gz" -C frontend/dist .
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            "afoil_gen-cli-${GITHUB_REF_NAME}-linux-x86_64.tar.gz" \
+            "afoil_gen-web-${GITHUB_REF_NAME}.tar.gz" \
+            --generate-notes \
+            --title "$GITHUB_REF_NAME"

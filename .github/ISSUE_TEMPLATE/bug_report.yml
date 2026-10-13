@@ -1,0 +1,34 @@
+name: Bug report
+description: Report a reproducible generator, interface, or export defect.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the expected and observed behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Include the smallest configuration and exact command that reproduce the issue. Remove confidential data first.
+      placeholder: cargo run --release -p mesh-cli -- ...
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: Include afoil_gen version, OS, Rust version, target solver/version, and complete error text.
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: CFD checks
+      options:
+        - label: I checked the generated quality report and target-solver mesh check.
+        - label: I understand that a generated mesh does not establish solution accuracy.

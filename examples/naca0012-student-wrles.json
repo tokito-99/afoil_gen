@@ -1,0 +1,97 @@
+{
+  "meshIntent": "WRLES",
+  "airfoil": {
+    "nacaCode": "0012",
+    "chordLength": 0.1143,
+    "angleOfAttackDeg": 5.0,
+    "finiteTrailingEdge": false,
+    "surfacePointCount": 161
+  },
+  "flow": {
+    "reynoldsNumber": 193394.337016575,
+    "freestreamVelocity": 25.0,
+    "density": 1.225,
+    "dynamicViscosity": 0.0000181
+  },
+  "domain": {
+    "upstreamRadiusChords": 10.0,
+    "upperRadiusChords": 10.0,
+    "lowerRadiusChords": 10.0,
+    "wakeLengthChords": 10.0,
+    "wakeHalfHeightChords": 3.0
+  },
+  "mesh": {
+    "upperSurfaceCells": 73,
+    "lowerSurfaceCells": 73,
+    "leadingEdgeCells": 22,
+    "wakeCells": 100,
+    "radialCells": 90,
+    "spanwiseCells": 27,
+    "surfaceGrading": 1.0,
+    "radialGrading": 1.15,
+    "wakeGrading": 1.0,
+    "spanwiseGrading": 1.0
+  },
+  "les": {
+    "enabled": true,
+    "mode": "WRLES",
+    "targetYPlus": 1.0,
+    "targetStreamwisePlus": 110.0,
+    "targetSpanwisePlus": 40.0,
+    "referenceBoundaryLayerThicknessChords": 0.02,
+    "minimumCellsAcrossBoundaryLayer": 30,
+    "maxRadialGrowthRatio": 1.12,
+    "estimateFirstCellHeight": true
+  },
+  "wake": {
+    "alignment": "BLENDED",
+    "blendLengthChords": 2.0,
+    "customAngleDeg": 0.0
+  },
+  "extrusion": {
+    "enabled": true,
+    "spanwiseThickness": 0.01143,
+    "frontBackPatchType": "CYCLIC"
+  },
+  "boundaries": {
+    "inlet": {
+      "name": "inlet",
+      "patchType": "PATCH"
+    },
+    "outlet": {
+      "name": "outlet",
+      "patchType": "PATCH"
+    },
+    "airfoil": {
+      "name": "airfoil_wall",
+      "patchType": "WALL"
+    },
+    "upperFarfield": {
+      "name": "upper_farfield",
+      "patchType": "PATCH"
+    },
+    "lowerFarfield": {
+      "name": "lower_farfield",
+      "patchType": "PATCH"
+    },
+    "front": {
+      "name": "front_plane",
+      "patchType": "CYCLIC"
+    },
+    "back": {
+      "name": "back_plane",
+      "patchType": "CYCLIC"
+    }
+  },
+  "output": {
+    "writeOpenfoam": true,
+    "writeGmsh": true,
+    "writeGeometryJson": true,
+    "gmshVersion": "2.2"
+  },
+  "optimization": {
+    "targetCellCenterYPlus": false,
+    "orthogonalizeWall": false,
+    "smoothingIterations": 0
+  }
+}

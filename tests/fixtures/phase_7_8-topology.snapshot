@@ -1,0 +1,57 @@
+blockMeshDict
+vertices 24
+blocks 6
+splines 18
+// Block 0: upper_leading_farfield
+hex (0 1 2 3 12 13 14 15) (40 120 16) simpleGrading (1.000000000000001e0 ((2.000000000000000e-3 3.916666666666667e-1 7.827798408046510e1) (9.980000000000000e-1 6.083333333333334e-1 4.435787033271090e2)) 1.000000000000000e0)
+// Block 1: upper_surface
+hex (1 4 5 2 13 16 17 14) (160 120 16) simpleGrading (9.999999999999964e-1 ((2.000000000000000e-3 3.916666666666667e-1 7.827798408046510e1) (9.980000000000000e-1 6.083333333333334e-1 4.435787033271090e2)) 1.000000000000000e0)
+// Block 2: lower_surface
+hex (4 6 7 8 16 18 19 20) (160 120 16) simpleGrading (9.999999999999964e-1 ((2.000000000000000e-3 3.916666666666667e-1 7.827798408046510e1) (9.980000000000000e-1 6.083333333333334e-1 4.435787033271090e2)) 1.000000000000000e0)
+// Block 3: lower_leading_farfield
+hex (6 0 3 7 18 12 15 19) (40 120 16) simpleGrading (1.000000000000001e0 ((2.000000000000000e-3 3.916666666666667e-1 7.827798408046510e1) (9.980000000000000e-1 6.083333333333334e-1 4.435787033271090e2)) 1.000000000000000e0)
+// Block 4: upper_wake_band
+hex (4 9 10 5 16 21 22 17) (240 120 16) simpleGrading (1.049999999999926e0 ((2.000000000000000e-3 3.916666666666667e-1 7.827798408046510e1) (9.980000000000000e-1 6.083333333333334e-1 4.435787033271090e2)) 1.000000000000000e0)
+// Block 5: lower_wake_band
+hex (9 4 8 11 21 16 20 23) (240 120 16) simpleGrading (9.523809523809766e-1 ((2.000000000000000e-3 3.916666666666667e-1 7.827798408046510e1) (9.980000000000000e-1 6.083333333333334e-1 4.435787033271090e2)) 1.000000000000000e0)
+patch inlet
+patch outlet
+patch airfoil_wall
+patch upper_farfield
+patch lower_farfield
+patch front_plane
+patch back_plane
+gmsh2.2
+nodes 1808120
+elements 1925120
+elementType 3 235520
+elementType 5 1689600
+physicalElements 1 6400
+physicalElements 2 3840
+physicalElements 3 6400
+physicalElements 4 3840
+physicalElements 5 3840
+physicalElements 6 105600
+physicalElements 7 105600
+physicalElements 8 76800
+physicalElements 9 307200
+physicalElements 10 307200
+physicalElements 11 76800
+physicalElements 12 460800
+physicalElements 13 460800
+$PhysicalNames
+13
+2 1 "inlet"
+2 2 "outlet"
+2 3 "airfoil_wall"
+2 4 "upper_farfield"
+2 5 "lower_farfield"
+2 6 "front_plane"
+2 7 "back_plane"
+3 8 "cellZone_upper_leading_farfield"
+3 9 "cellZone_upper_surface"
+3 10 "cellZone_lower_surface"
+3 11 "cellZone_lower_leading_farfield"
+3 12 "cellZone_upper_wake_band"
+3 13 "cellZone_lower_wake_band"
+$EndPhysicalNames

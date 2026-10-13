@@ -1,0 +1,7 @@
+side,xOverChord,wallShearStressPa,signedWallShearStressPa,intermittency,boundaryLayerThicknessChords
+UPPER,0.0,1.2,1.2,0.0,0.010
+UPPER,0.5,2.4,2.4,0.5,0.018
+UPPER,1.0,0.8,-0.8,1.0,0.025
+LOWER,0.0,1.1,1.1,0.0,0.010
+LOWER,0.5,1.7,1.7,1.0,0.015
+LOWER,1.0,1.0,1.0,1.0,0.020

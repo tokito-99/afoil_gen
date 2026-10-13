@@ -1,0 +1,19 @@
+[package]
+name = "mesh-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Command-line interface for afoil_gen"
+repository.workspace = true
+homepage.workspace = true
+publish = false
+
+[dependencies]
+clap.workspace = true
+mesh-core.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true

@@ -320,14 +320,14 @@ fn analyze_series(
         return;
     }
     for _ in 0..100 {
-        let middle = (low + high) * 0.5;
+        let middle = f64::midpoint(low, high);
         if function(middle) > 0.0 {
             high = middle;
         } else {
             low = middle;
         }
     }
-    let order = (low + high) * 0.5;
+    let order = f64::midpoint(low, high);
     let denominator = r_fine.powf(order) - 1.0;
     let extrapolated = data[2].0 - d21 / denominator;
     let gci = 1.25 * d21.abs() / denominator;

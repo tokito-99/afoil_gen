@@ -421,7 +421,7 @@ mod tests {
         assert!(preview.quality.valid);
         assert_eq!(preview.quality.block_count, 6);
         assert_eq!(preview.block_boundaries.len(), 24);
-        assert!(!preview.mesh_lines.is_empty());
+        assert_ne!(preview.mesh_lines.as_slice(), &[]);
         assert_eq!(preview.boundary_patches.len(), 5);
         assert!(
             preview
@@ -442,7 +442,7 @@ mod tests {
             .expect("coarse preview");
         let full =
             generate_mesh_preview(&configuration, PreviewLevel::FullMesh).expect("full preview");
-        assert!(topology.mesh_lines.is_empty());
+        assert_eq!(topology.mesh_lines.as_slice(), &[]);
         assert!(coarse.mesh_lines.len() < full.mesh_lines.len());
         assert_eq!(coarse.quality, full.quality);
     }

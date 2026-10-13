@@ -12,7 +12,7 @@
 
 ## Requirements
 
-- Rust 1.88 or newer
+- Rust 1.88 or newer (the development and CI toolchain is pinned to 1.99)
 - Node.js 22 or newer with npm
 - `wasm-pack` 0.15
 

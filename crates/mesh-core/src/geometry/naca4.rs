@@ -242,7 +242,7 @@ mod tests {
     fn naca2412_has_positive_camber() {
         let geometry = generate_airfoil(&config("2412")).expect("valid geometry");
         let middle = geometry.upper.len() / 2;
-        let mean_y = 0.5 * (geometry.upper[middle].y + geometry.lower[middle].y);
+        let mean_y = f64::midpoint(geometry.upper[middle].y, geometry.lower[middle].y);
         assert!(mean_y > 0.0);
     }
 

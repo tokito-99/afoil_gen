@@ -721,7 +721,7 @@ fn minimum_orthogonal_quality_2d(
         let normal_x = -tangent_y;
         let normal_y = tangent_x;
         let normal_length = normal_x.hypot(normal_y);
-        let face = Point2::new(0.5 * (p0.x + p1.x), 0.5 * (p0.y + p1.y));
+        let face = Point2::new(f64::midpoint(p0.x, p1.x), f64::midpoint(p0.y, p1.y));
         for cell in cells {
             let centroid = centroids.get(*cell)?.as_ref()?;
             let dx = face.x - centroid.x;

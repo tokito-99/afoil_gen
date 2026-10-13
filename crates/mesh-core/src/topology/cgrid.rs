@@ -91,8 +91,8 @@ pub fn build_cgrid_topology(configuration: &MeshConfiguration) -> Result<CGridTo
         MeshError::TopologyError("lower airfoil surface contains no points".to_owned())
     })?;
     let trailing_edge_center = Point2::new(
-        0.5 * (actual_upper_te.x + actual_lower_te.x),
-        0.5 * (actual_upper_te.y + actual_lower_te.y),
+        f64::midpoint(actual_upper_te.x, actual_lower_te.x),
+        f64::midpoint(actual_upper_te.y, actual_lower_te.y),
     );
     let actual_half_thickness = 0.5 * actual_upper_te.distance_to(actual_lower_te);
     let finite_trailing_edge = configuration.airfoil.finite_trailing_edge;
@@ -466,7 +466,7 @@ fn blended_wake_curves(
     initial_angle: f64,
     blend_length: f64,
 ) -> (CurveSpec, CurveSpec) {
-    let center_end = Point2::new(outlet_x, 0.5 * (upper_end.y + lower_end.y));
+    let center_end = Point2::new(outlet_x, f64::midpoint(upper_end.y, lower_end.y));
     let upper_start_offset = Point2::new(
         upper_start.x - center_start.x,
         upper_start.y - center_start.y,

@@ -4,7 +4,13 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [Unreleased]
 
-No unreleased changes are recorded yet.
+### Fixed
+
+- Rust 1.99 Clippy compatibility for overflow-safe floating-point midpoints and collection assertions.
+
+### Changed
+
+- Pinned the development and CI toolchain while retaining an explicit Rust 1.88 minimum-version check.
 
 ## [0.1.0] - 2026-10-13
 

@@ -135,7 +135,9 @@ pub fn estimate_les_sizing(
     let radial_cells_within_boundary_layer = stretching
         .point_positions
         .windows(2)
-        .take_while(|points| 0.5 * (points[0] + points[1]) <= reference_boundary_layer_thickness)
+        .take_while(|points| {
+            f64::midpoint(points[0], points[1]) <= reference_boundary_layer_thickness
+        })
         .count();
 
     Ok(LesSizingEstimate {

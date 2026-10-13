@@ -199,9 +199,9 @@ pub fn solve_geometric_stretching(
 
     let mut lower = 1.0;
     let mut upper = maximum_ratio;
-    let mut ratio = 0.5 * (lower + upper);
+    let mut ratio = f64::midpoint(lower, upper);
     for _ in 0..MAX_BISECTION_ITERATIONS {
-        ratio = 0.5 * (lower + upper);
+        ratio = f64::midpoint(lower, upper);
         let length = geometric_sum(first_cell_height, cell_count, ratio);
         if (length - total_length).abs() <= tolerance {
             break;

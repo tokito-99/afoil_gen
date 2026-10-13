@@ -212,7 +212,10 @@ pub(crate) fn redistribute_wall_positions(
         for index in 1..=512_u32 {
             let t = f64::from(index) / 512.0;
             let point = block.bottom.point(t);
-            let midpoint = Point2::new((point.x + previous.x) * 0.5, (point.y + previous.y) * 0.5);
+            let midpoint = Point2::new(
+                f64::midpoint(point.x, previous.x),
+                f64::midpoint(point.y, previous.y),
+            );
             let sample = profile.sample(side, chord_coordinate(midpoint, configuration));
             let transition = sample.intermittency.is_some_and(|v| v > 0.05 && v < 0.95);
             let reversed = sample.signed_wall_shear_stress_pa.is_some_and(|v| v < 0.0);

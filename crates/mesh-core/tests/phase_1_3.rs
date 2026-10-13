@@ -47,7 +47,7 @@ fn naca2412_example_loads_and_rotates_with_rans_wall_spacing() {
             .airfoil_upper
             .iter()
             .zip(&preview.airfoil_lower)
-            .any(|(upper, lower)| 0.5 * (upper.y + lower.y) > 0.0)
+            .any(|(upper, lower)| f64::midpoint(upper.y, lower.y) > 0.0)
     );
 }
 

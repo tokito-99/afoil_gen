@@ -115,7 +115,7 @@ pub fn audit_wall_resolution(
         }
         let nx = -(b.y - a.y) / length;
         let ny = (b.x - a.x) / length;
-        let midpoint = Point2::new((a.x + b.x) * 0.5, (a.y + b.y) * 0.5);
+        let midpoint = Point2::new(f64::midpoint(a.x, b.x), f64::midpoint(a.y, b.y));
         let center = quad_centroid(points);
         let dx = center.x - midpoint.x;
         let dy = center.y - midpoint.y;
@@ -189,7 +189,7 @@ fn local_shear(
     };
     let x0 = chord_coordinate(a, configuration);
     let x1 = chord_coordinate(b, configuration);
-    let sample = profile.sample(side, (x0 + x1) * 0.5);
+    let sample = profile.sample(side, f64::midpoint(x0, x1));
     (
         profile.maximum_on_interval(side, x0, x1),
         sample.signed_wall_shear_stress_pa.is_some_and(|v| v < 0.0),
@@ -213,7 +213,7 @@ fn measured_layer_coverage(mesh: &StructuredMesh2D, configuration: &MeshConfigur
             let b = mesh.points[block.global_index(i + 1, 0)];
             let length = a.distance_to(b);
             let (nx, ny) = (-(b.y - a.y) / length, (b.x - a.x) / length);
-            let midpoint = Point2::new((a.x + b.x) * 0.5, (a.y + b.y) * 0.5);
+            let midpoint = Point2::new(f64::midpoint(a.x, b.x), f64::midpoint(a.y, b.y));
             let thickness = configuration
                 .les
                 .wall_shear_profile

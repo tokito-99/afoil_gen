@@ -15,6 +15,7 @@ All notable changes to this project are documented here. The format follows Keep
 ### Changed
 
 - Pinned the development and CI toolchain while retaining an explicit Rust 1.88 minimum-version check.
+- Refined the public README with project branding, status badges, a compact capability summary, and clearer quick-start paths.
 
 ## [0.1.0] - 2026-10-13
 

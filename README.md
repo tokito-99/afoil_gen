@@ -1,8 +1,4 @@
 <p align="center">
-  <img src="docs/images/branding/afoil_gen-icon-2048.png" alt="afoil_gen icon" width="88" />
-</p>
-
-<p align="center">
   <img src="docs/images/branding/afoil_gen-readme-banner-4000x1000.png" alt="afoil_gen structured RANS and LES C-mesh generator" width="100%" />
 </p>
 

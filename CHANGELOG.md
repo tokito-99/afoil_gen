@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [Unreleased]
 
+### Added
+
+- README mesh gallery with validated sharp and finite trailing-edge examples across RANS, WMLES, and WRLES configurations.
+
 ### Fixed
 
 - Rust 1.99 Clippy compatibility for overflow-safe floating-point midpoints and collection assertions.

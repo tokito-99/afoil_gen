@@ -10,6 +10,15 @@
 - Mesh previews and geometric quality checks
 - OpenFOAM `blockMeshDict`, Gmsh `.msh`, and Fluent `.msh` export
 
+## Mesh examples
+
+Each image is rendered from the generator's full mesh preview. These are mesh views, not CFD solution contours.
+
+| Full-domain views | Near-airfoil views |
+| --- | --- |
+| [![NACA 0012 at zero degrees with a sharp trailing edge and periodic WRLES extrusion](docs/images/naca0012-wrles-full-domain.png)](examples/naca0012-les.json)<br>**NACA 0012 · 0° · WRLES**<br>Sharp trailing edge, periodic 3D extrusion | [![NACA 2412 at positive four degrees with a sharp trailing edge and wall-resolved RANS mesh](docs/images/naca2412-rans-nearfield.png)](examples/naca2412-rans.json)<br>**NACA 2412 · +4° · wall-resolved RANS**<br>Sharp trailing edge, 2D-equivalent `EMPTY` slab |
+| [![NACA 0012 at negative three degrees with a finite trailing edge and wall-function RANS mesh](docs/images/naca0012-rans-finite-composite.png)](examples/naca0012-rans-finite.json)<br>**NACA 0012 · −3° · wall-function RANS**<br>Finite trailing edge, full domain with near-field inset | [![NACA 4415 at positive eight degrees with a sharp trailing edge and WMLES mesh](docs/images/naca4415-wmles-nearfield.png)](examples/naca4415-wmles.json)<br>**NACA 4415 · +8° · WMLES**<br>Sharp trailing edge, periodic 3D extrusion |
+
 ## Requirements
 
 - Rust 1.88 or newer (the development and CI toolchain is pinned to 1.99)

@@ -1,0 +1,76 @@
+{
+  "meshIntent": "RANS_WALL_FUNCTION",
+  "airfoil": {
+    "nacaCode": "0012",
+    "chordLength": 1.0,
+    "angleOfAttackDeg": -3.0,
+    "finiteTrailingEdge": true,
+    "surfacePointCount": 121
+  },
+  "flow": {
+    "reynoldsNumber": 2000000.0,
+    "freestreamVelocity": 29.551020408163264,
+    "density": 1.225,
+    "dynamicViscosity": 0.0000181
+  },
+  "domain": {
+    "upstreamRadiusChords": 10.0,
+    "upperRadiusChords": 10.0,
+    "lowerRadiusChords": 10.0,
+    "wakeLengthChords": 18.0,
+    "wakeHalfHeightChords": 3.0
+  },
+  "mesh": {
+    "upperSurfaceCells": 80,
+    "lowerSurfaceCells": 80,
+    "leadingEdgeCells": 20,
+    "wakeCells": 120,
+    "radialCells": 72,
+    "spanwiseCells": 1,
+    "surfaceGrading": 1.0,
+    "radialGrading": 1.15,
+    "wakeGrading": 1.04,
+    "spanwiseGrading": 1.0
+  },
+  "les": {
+    "enabled": false,
+    "mode": "WRLES",
+    "targetYPlus": 50.0,
+    "targetStreamwisePlus": 500.0,
+    "targetSpanwisePlus": 150.0,
+    "referenceBoundaryLayerThicknessChords": 0.04,
+    "minimumCellsAcrossBoundaryLayer": 24,
+    "maxRadialGrowthRatio": 1.2,
+    "estimateFirstCellHeight": true
+  },
+  "wake": {
+    "alignment": "BLENDED",
+    "blendLengthChords": 2.0,
+    "customAngleDeg": 0.0
+  },
+  "extrusion": {
+    "enabled": true,
+    "spanwiseThickness": 0.01,
+    "frontBackPatchType": "EMPTY"
+  },
+  "boundaries": {
+    "inlet": { "name": "inlet", "patchType": "PATCH" },
+    "outlet": { "name": "outlet", "patchType": "PATCH" },
+    "airfoil": { "name": "airfoil_wall", "patchType": "WALL" },
+    "upperFarfield": { "name": "upper_farfield", "patchType": "PATCH" },
+    "lowerFarfield": { "name": "lower_farfield", "patchType": "PATCH" },
+    "front": { "name": "front_plane", "patchType": "EMPTY" },
+    "back": { "name": "back_plane", "patchType": "EMPTY" }
+  },
+  "output": {
+    "writeOpenfoam": true,
+    "writeGmsh": true,
+    "writeGeometryJson": true,
+    "gmshVersion": "2.2"
+  },
+  "optimization": {
+    "targetCellCenterYPlus": false,
+    "orthogonalizeWall": false,
+    "smoothingIterations": 0
+  }
+}

@@ -136,3 +136,20 @@ target/release/mesh-cli verify examples/naca2412-rans.json \
 ```
 
 Verification logs and a machine-readable report remain in that directory. Fluent export is supported directly, but final import and mesh checks should still be performed in the Fluent version used for the simulation.
+
+## 9. Render a static mesh image
+
+Create a full-mesh preview and turn it into an SVG for documentation or comparison reports:
+
+```bash
+target/release/mesh-cli preview examples/naca2412-rans.json \
+  --output examples/generated/tutorial/naca2412-preview.json \
+  --level full-mesh
+npm --workspace frontend run render-preview -- \
+  examples/generated/tutorial/naca2412-preview.json \
+  examples/generated/tutorial/naca2412-preview.svg \
+  --title "NACA 2412 · +4° · wall-resolved RANS" \
+  --view near
+```
+
+Use `--view domain`, `--view near`, or `--view composite`. Boundary labels are hidden by default to keep dense grids readable; add `--labels` when they are useful.

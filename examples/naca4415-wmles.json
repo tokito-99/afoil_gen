@@ -1,0 +1,76 @@
+{
+  "meshIntent": "WMLES",
+  "airfoil": {
+    "nacaCode": "4415",
+    "chordLength": 0.3,
+    "angleOfAttackDeg": 8.0,
+    "finiteTrailingEdge": false,
+    "surfacePointCount": 161
+  },
+  "flow": {
+    "reynoldsNumber": 500000.0,
+    "freestreamVelocity": 24.62585034013605,
+    "density": 1.225,
+    "dynamicViscosity": 0.0000181
+  },
+  "domain": {
+    "upstreamRadiusChords": 12.0,
+    "upperRadiusChords": 12.0,
+    "lowerRadiusChords": 12.0,
+    "wakeLengthChords": 20.0,
+    "wakeHalfHeightChords": 3.0
+  },
+  "mesh": {
+    "upperSurfaceCells": 120,
+    "lowerSurfaceCells": 120,
+    "leadingEdgeCells": 32,
+    "wakeCells": 180,
+    "radialCells": 96,
+    "spanwiseCells": 12,
+    "surfaceGrading": 1.0,
+    "radialGrading": 1.15,
+    "wakeGrading": 1.04,
+    "spanwiseGrading": 1.0
+  },
+  "les": {
+    "enabled": true,
+    "mode": "WMLES",
+    "targetYPlus": 30.0,
+    "targetStreamwisePlus": 400.0,
+    "targetSpanwisePlus": 100.0,
+    "referenceBoundaryLayerThicknessChords": 0.05,
+    "minimumCellsAcrossBoundaryLayer": 24,
+    "maxRadialGrowthRatio": 1.2,
+    "estimateFirstCellHeight": true
+  },
+  "wake": {
+    "alignment": "BLENDED",
+    "blendLengthChords": 2.0,
+    "customAngleDeg": 0.0
+  },
+  "extrusion": {
+    "enabled": true,
+    "spanwiseThickness": 0.03,
+    "frontBackPatchType": "CYCLIC"
+  },
+  "boundaries": {
+    "inlet": { "name": "inlet", "patchType": "PATCH" },
+    "outlet": { "name": "outlet", "patchType": "PATCH" },
+    "airfoil": { "name": "airfoil_wall", "patchType": "WALL" },
+    "upperFarfield": { "name": "upper_farfield", "patchType": "PATCH" },
+    "lowerFarfield": { "name": "lower_farfield", "patchType": "PATCH" },
+    "front": { "name": "front_plane", "patchType": "CYCLIC" },
+    "back": { "name": "back_plane", "patchType": "CYCLIC" }
+  },
+  "output": {
+    "writeOpenfoam": true,
+    "writeGmsh": true,
+    "writeGeometryJson": true,
+    "gmshVersion": "2.2"
+  },
+  "optimization": {
+    "targetCellCenterYPlus": false,
+    "orthogonalizeWall": false,
+    "smoothingIterations": 0
+  }
+}

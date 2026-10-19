@@ -8,7 +8,10 @@ import {
   generateOpenfoam,
 } from '../api/meshEngine.js';
 import { useMeshWorkspace } from '../state/meshStore.js';
-import type { GmshVersion } from '../types/mesh.js';
+import type {
+  FluentFarfieldMode,
+  GmshVersion,
+} from '../types/mesh.js';
 import {
   configurationFilename,
   downloadText,
@@ -241,6 +244,29 @@ export function ExportPanel(): ReactNode {
       </div>
       <details className="export-options">
         <summary>Format options</summary>
+        <label>
+          <span>Fluent outer boundary</span>
+          <select
+            onChange={(event) => {
+              updateConfiguration({
+                ...configuration,
+                output: {
+                  ...configuration.output,
+                  fluentFarfieldMode: event.currentTarget
+                    .value as FluentFarfieldMode,
+                },
+              });
+            }}
+            value={configuration.output.fluentFarfieldMode}
+          >
+            <option value="VELOCITY_INLET">
+              Low-speed · velocity inlet
+            </option>
+            <option value="PRESSURE_FAR_FIELD">
+              Compressible · pressure far-field
+            </option>
+          </select>
+        </label>
         <label>
           <span>Gmsh version</span>
           <select

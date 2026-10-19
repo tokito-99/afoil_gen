@@ -69,6 +69,7 @@ export const DEFAULT_CONFIGURATION: MeshConfiguration = {
     writeGmsh: true,
     writeGeometryJson: true,
     gmshVersion: '2.2',
+    fluentFarfieldMode: 'VELOCITY_INLET',
   },
   optimization: {
     targetCellCenterYPlus: false,

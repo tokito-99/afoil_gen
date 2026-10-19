@@ -11,6 +11,13 @@ All notable changes to this project are documented here. The format follows Keep
 ### Fixed
 
 - Rust 1.99 Clippy compatibility for overflow-safe floating-point midpoints and collection assertions.
+- Fluent outer-boundary zones now use one coherent, selectable model: velocity
+  inlets for low-speed constant-density cases or pressure far-fields for
+  compressible ideal-gas cases.
+- Airfoil surface spacing now follows physical arc length instead of geometry
+  sample indices. Wake spacing is matched to the trailing-edge cells, targets
+  5% adjacent growth with a 20% coarse-mesh safety ceiling, and is preserved in
+  OpenFOAM through multi-grading.
 
 ### Changed
 

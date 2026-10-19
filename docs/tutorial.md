@@ -48,6 +48,31 @@ target/release/mesh-cli fluent examples/naca2412-rans.json \
   --output examples/generated/tutorial/rans-fluent.msh
 ```
 
+The default `output.fluentFarfieldMode` is `VELOCITY_INLET`. Fluent receives
+the curved C boundary and both upper/lower outer legs as velocity inlets, the
+downstream cut as a pressure outlet, and the airfoil as a wall. Apply the same
+freestream and turbulence quantities to all three inlet zones. Because the
+generator rotates the airfoil geometry, use a horizontal velocity vector and
+do not apply the angle of attack again in the inlet direction.
+
+In Fluent, set **Velocity Specification Method** to **Components** on `inlet`,
+`upper_farfield`, and `lower_farfield`. For a 20 m/s case, enter an absolute
+velocity of `X = 20 m/s` and `Y = 0 m/s` on all three zones. Do not select
+**Magnitude, Normal to Boundary**: that setting drives flow radially through
+the curved and straight outer boundaries. Reinitialize the solution after
+changing boundary types or velocity directions so an old, invalid field is not
+retained.
+
+For a compressible ideal-gas case, set:
+
+```json
+"fluentFarfieldMode": "PRESSURE_FAR_FIELD"
+```
+
+This assigns pressure far-field to the complete non-outlet outer boundary.
+Fluent requires ideal-gas density for that boundary condition. The downstream
+cut remains a pressure outlet in either mode.
+
 If Gmsh is installed, view the generated grid with:
 
 ```bash

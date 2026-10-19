@@ -7,7 +7,7 @@ use std::{
 };
 
 use crate::{
-    config::{FrontBackPatchType, MeshConfiguration, PatchType},
+    config::{FluentFarfieldMode, FrontBackPatchType, MeshConfiguration, PatchType},
     error::MeshError,
     mesh::{
         BoundaryPatch2D, StructuredMesh2D, extrusion::spanwise_planes, quality::MeshQualityReport,
@@ -147,7 +147,7 @@ fn collect_edges(mesh: &StructuredMesh2D) -> Result<BTreeMap<[usize; 2], EdgeFac
 
 #[allow(clippy::too_many_lines)]
 fn write_2d(
-    _configuration: &MeshConfiguration,
+    configuration: &MeshConfiguration,
     mesh: &StructuredMesh2D,
     edges: &BTreeMap<[usize; 2], EdgeFace>,
     output: &mut impl Write,
@@ -156,7 +156,7 @@ fn write_2d(
     let cell_count = mesh.cells.len();
     let face_count = edges.len();
     let interior_count = edges.values().filter(|face| face.cell_1 != 0).count();
-    let zones = boundary_zones(&mesh.boundaries);
+    let zones = boundary_zones(&mesh.boundaries, configuration.output.fluent_farfield_mode);
 
     write_declarations(output, 2, point_count, cell_count, face_count)?;
     writeln!(output, "(10 (1 1 {point_count:x} 1 2)(")?;
@@ -249,7 +249,7 @@ fn write_3d(
     let interior_count = interior_side_count
         .checked_add(interior_span_count)
         .ok_or_else(|| MeshError::ExportError("Fluent interior face count overflow".to_owned()))?;
-    let mut zones = boundary_zones(&mesh.boundaries);
+    let mut zones = boundary_zones(&mesh.boundaries, configuration.output.fluent_farfield_mode);
     let front_zone = front_back_zone(
         FIRST_BOUNDARY_ZONE_ID + zones.len(),
         &configuration.boundaries.front.name,
@@ -483,12 +483,13 @@ fn write_zone_metadata(
     Ok(())
 }
 
-fn boundary_zones(patches: &[BoundaryPatch2D]) -> Vec<FaceZone> {
+fn boundary_zones(patches: &[BoundaryPatch2D], farfield_mode: FluentFarfieldMode) -> Vec<FaceZone> {
     patches
         .iter()
         .enumerate()
         .map(|(index, patch)| {
-            let (boundary_condition, zone_type) = patch_zone_type(patch.role, patch.patch_type);
+            let (boundary_condition, zone_type) =
+                patch_zone_type(patch.role, patch.patch_type, farfield_mode);
             FaceZone {
                 id: FIRST_BOUNDARY_ZONE_ID + index,
                 boundary_condition,
@@ -499,16 +500,24 @@ fn boundary_zones(patches: &[BoundaryPatch2D]) -> Vec<FaceZone> {
         .collect()
 }
 
-const fn patch_zone_type(role: BoundaryRole, patch_type: PatchType) -> (usize, &'static str) {
+const fn patch_zone_type(
+    role: BoundaryRole,
+    patch_type: PatchType,
+    farfield_mode: FluentFarfieldMode,
+) -> (usize, &'static str) {
     match patch_type {
         PatchType::Wall => (3, "wall"),
         PatchType::SymmetryPlane | PatchType::Empty => (7, "symmetry"),
         PatchType::Cyclic => (12, "periodic"),
         PatchType::Patch => match role {
-            BoundaryRole::Inlet => (10, "velocity-inlet"),
             BoundaryRole::Outlet => (5, "pressure-outlet"),
             BoundaryRole::Airfoil => (3, "wall"),
-            BoundaryRole::UpperFarfield | BoundaryRole::LowerFarfield => (9, "pressure-far-field"),
+            BoundaryRole::Inlet | BoundaryRole::UpperFarfield | BoundaryRole::LowerFarfield => {
+                match farfield_mode {
+                    FluentFarfieldMode::VelocityInlet => (10, "velocity-inlet"),
+                    FluentFarfieldMode::PressureFarField => (9, "pressure-far-field"),
+                }
+            }
         },
     }
 }
@@ -590,7 +599,7 @@ impl fmt::Display for Scalar {
 mod tests {
     use super::{export_fluent, write_fluent_streaming};
     use crate::{
-        config::{FrontBackPatchType, MeshIntent, PatchType},
+        config::{FluentFarfieldMode, FrontBackPatchType, MeshIntent, PatchType},
         test_support::small_configuration,
     };
 
@@ -607,7 +616,24 @@ mod tests {
         assert!(first.contains(" 1 3))"));
         assert!(first.contains(" wall airfoil_wall 1)())"));
         assert!(first.contains(" velocity-inlet inlet 1)())"));
+        assert!(first.contains(" velocity-inlet upper_farfield 1)())"));
+        assert!(first.contains(" velocity-inlet lower_farfield 1)())"));
+        assert!(!first.contains(" pressure-far-field "));
         assert!(!first.contains("(18 "));
+    }
+
+    #[test]
+    fn pressure_farfield_mode_is_coherent_across_the_complete_outer_boundary() {
+        let mut configuration = small_configuration();
+        configuration.output.fluent_farfield_mode = FluentFarfieldMode::PressureFarField;
+
+        let contents = export_fluent(&configuration).expect("pressure far-field Fluent export");
+
+        assert!(contents.contains(" pressure-far-field inlet 1)())"));
+        assert!(contents.contains(" pressure-far-field upper_farfield 1)())"));
+        assert!(contents.contains(" pressure-far-field lower_farfield 1)())"));
+        assert!(contents.contains(" pressure-outlet outlet 1)())"));
+        assert!(!contents.contains(" velocity-inlet "));
     }
 
     #[test]

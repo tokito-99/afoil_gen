@@ -1,8 +1,8 @@
 use crate::config::{
     AirfoilConfiguration, BoundaryConfiguration, BoundaryDefinition, DomainConfiguration,
-    ExtrusionConfiguration, FlowConfiguration, FrontBackPatchType, GmshVersion, LesConfiguration,
-    LesMode, MeshConfiguration, MeshIntent, MeshResolutionConfiguration, OutputConfiguration,
-    PatchType, WakeConfiguration,
+    ExtrusionConfiguration, FlowConfiguration, FluentFarfieldMode, FrontBackPatchType, GmshVersion,
+    LesConfiguration, LesMode, MeshConfiguration, MeshIntent, MeshResolutionConfiguration,
+    OutputConfiguration, PatchType, WakeConfiguration,
 };
 
 pub(crate) fn example_configuration() -> MeshConfiguration {
@@ -75,6 +75,7 @@ pub(crate) fn example_configuration() -> MeshConfiguration {
             write_gmsh: true,
             write_geometry_json: true,
             gmsh_version: GmshVersion::V2_2,
+            fluent_farfield_mode: FluentFarfieldMode::VelocityInlet,
         },
     }
 }
@@ -90,7 +91,7 @@ pub(crate) fn small_configuration() -> MeshConfiguration {
     configuration.mesh.upper_surface_cells = 24;
     configuration.mesh.lower_surface_cells = 24;
     configuration.mesh.leading_edge_cells = 8;
-    configuration.mesh.wake_cells = 32;
+    configuration.mesh.wake_cells = 64;
     configuration.mesh.radial_cells = 64;
     configuration.mesh.spanwise_cells = 1;
     configuration.mesh_intent = Some(MeshIntent::RansWallResolved);

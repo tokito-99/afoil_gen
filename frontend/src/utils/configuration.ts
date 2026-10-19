@@ -49,6 +49,10 @@ export function normalizeMeshConfiguration(
       ...DEFAULT_CONFIGURATION.optimization,
       ...configuration.optimization,
     },
+    output: {
+      ...DEFAULT_CONFIGURATION.output,
+      ...configuration.output,
+    },
   });
 }
 

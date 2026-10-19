@@ -78,11 +78,26 @@ impl ParametricCurve for PolylineCurve {
 #[serde(rename_all = "camelCase")]
 pub struct AirfoilSurfaceCurve {
     pub points: Vec<Point2>,
+    #[serde(skip)]
+    cumulative_lengths: Vec<f64>,
+}
+
+impl AirfoilSurfaceCurve {
+    /// Creates an airfoil curve whose parameter follows physical arc length.
+    /// Geometry sampling density must not silently become mesh spacing.
+    #[must_use]
+    pub fn new(points: Vec<Point2>) -> Self {
+        let cumulative_lengths = cumulative_lengths(&points);
+        Self {
+            points,
+            cumulative_lengths,
+        }
+    }
 }
 
 impl ParametricCurve for AirfoilSurfaceCurve {
     fn point(&self, parameter: f64) -> Point2 {
-        interpolate_samples(&self.points, parameter)
+        interpolate_samples_by_arc_length(&self.points, &self.cumulative_lengths, parameter)
     }
 }
 
@@ -164,7 +179,7 @@ impl CurveSpec {
             Self::AirfoilSurface(curve) => {
                 let mut points = curve.points.clone();
                 points.reverse();
-                Self::AirfoilSurface(AirfoilSurfaceCurve { points })
+                Self::AirfoilSurface(AirfoilSurfaceCurve::new(points))
             }
             Self::Sampled(curve) => {
                 let mut points = curve.points.clone();
@@ -221,11 +236,54 @@ fn interpolate_samples(points: &[Point2], parameter: f64) -> Point2 {
     }
 }
 
+fn cumulative_lengths(points: &[Point2]) -> Vec<f64> {
+    let mut lengths = Vec::with_capacity(points.len());
+    let mut total = 0.0;
+    lengths.push(total);
+    for pair in points.windows(2) {
+        total += pair[0].distance_to(pair[1]);
+        lengths.push(total);
+    }
+    lengths
+}
+
+fn interpolate_samples_by_arc_length(
+    points: &[Point2],
+    cumulative_lengths: &[f64],
+    parameter: f64,
+) -> Point2 {
+    match points {
+        [] => Point2::new(f64::NAN, f64::NAN),
+        [point] => *point,
+        _ => {
+            let total = cumulative_lengths.last().copied().unwrap_or_default();
+            if !total.is_finite() || total <= f64::EPSILON {
+                return interpolate_samples(points, parameter);
+            }
+            let target = parameter.clamp(0.0, 1.0) * total;
+            let upper = cumulative_lengths.partition_point(|&length| length < target);
+            if upper == 0 {
+                return points[0];
+            }
+            if upper >= points.len() {
+                return points[points.len() - 1];
+            }
+            let lower = upper - 1;
+            let segment_length = cumulative_lengths[upper] - cumulative_lengths[lower];
+            if segment_length <= f64::EPSILON {
+                return points[upper];
+            }
+            let local_parameter = (target - cumulative_lengths[lower]) / segment_length;
+            interpolate(points[lower], points[upper], local_parameter)
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::f64::consts::{FRAC_PI_2, PI};
 
-    use super::{CircularArcCurve, LineCurve, ParametricCurve, PolylineCurve};
+    use super::{AirfoilSurfaceCurve, CircularArcCurve, LineCurve, ParametricCurve, PolylineCurve};
     use crate::geometry::Point2;
 
     #[test]
@@ -234,6 +292,20 @@ mod tests {
         assert_eq!(line.point(0.0), Point2::new(0.0, 1.0));
         assert_eq!(line.point(1.0), Point2::new(2.0, 3.0));
         assert_eq!(line.point(0.5), Point2::new(1.0, 2.0));
+    }
+
+    #[test]
+    fn airfoil_parameter_uses_arc_length_not_sample_index() {
+        let curve = AirfoilSurfaceCurve::new(vec![
+            Point2::new(0.0, 0.0),
+            Point2::new(0.1, 0.0),
+            Point2::new(1.0, 0.0),
+        ]);
+
+        let midpoint = curve.point(0.5);
+
+        assert!((midpoint.x - 0.5).abs() < 1.0e-12);
+        assert!(midpoint.y.abs() < 1.0e-12);
     }
 
     #[test]

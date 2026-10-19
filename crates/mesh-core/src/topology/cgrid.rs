@@ -23,6 +23,9 @@ const LEADING_EDGE_SPLIT_FRACTION: f64 = 0.3;
 const MINIMUM_FINITE_WAKE_HALF_THICKNESS_CHORDS: f64 = 1.0e-8;
 const FARFIELD_CURVE_SAMPLE_COUNT: usize = 33;
 const WAKE_CURVE_SAMPLE_COUNT: usize = 129;
+const MAXIMUM_TRAILING_EDGE_TO_WAKE_SIZE_RATIO: f64 = 1.5;
+const MAXIMUM_WAKE_ADJACENT_CELL_GROWTH_RATIO: f64 = 1.05;
+const MAXIMUM_COARSE_WAKE_ADJACENT_CELL_GROWTH_RATIO: f64 = 1.20;
 
 type RadialPositions = (
     Vec<f64>,
@@ -233,40 +236,35 @@ pub fn build_cgrid_topology(configuration: &MeshConfiguration) -> Result<CGridTo
         configuration.mesh.surface_grading,
         false,
     );
-    let upper_wake_positions = graded_positions(
-        configuration.mesh.wake_cells,
-        configuration.mesh.wake_grading,
-        false,
-    );
-    let lower_wake_positions = graded_positions(
-        configuration.mesh.wake_cells,
-        configuration.mesh.wake_grading,
-        true,
-    );
-    let upper_leading_bottom = CurveSpec::AirfoilSurface(AirfoilSurfaceCurve {
-        points: upper_leading_points,
-    });
+    let upper_leading_bottom =
+        CurveSpec::AirfoilSurface(AirfoilSurfaceCurve::new(upper_leading_points));
     let upper_leading_top = CurveSpec::Sampled(SampledCurve {
         points: upper_leading_outer_points,
     });
-    let upper_aft_bottom = CurveSpec::AirfoilSurface(AirfoilSurfaceCurve {
-        points: upper_aft_points,
-    });
+    let upper_aft_bottom = CurveSpec::AirfoilSurface(AirfoilSurfaceCurve::new(upper_aft_points));
     let upper_aft_top = CurveSpec::Sampled(SampledCurve {
         points: upper_aft_outer_points,
     });
-    let lower_aft_bottom = CurveSpec::AirfoilSurface(AirfoilSurfaceCurve {
-        points: lower_aft_points,
-    });
+    let lower_aft_bottom = CurveSpec::AirfoilSurface(AirfoilSurfaceCurve::new(lower_aft_points));
     let lower_aft_top = CurveSpec::Sampled(SampledCurve {
         points: lower_aft_outer_points,
     });
-    let lower_leading_bottom = CurveSpec::AirfoilSurface(AirfoilSurfaceCurve {
-        points: lower_leading_points,
-    });
+    let lower_leading_bottom =
+        CurveSpec::AirfoilSurface(AirfoilSurfaceCurve::new(lower_leading_points));
     let lower_leading_top = CurveSpec::Sampled(SampledCurve {
         points: lower_leading_outer_points,
     });
+
+    let upper_trailing_edge_size = end_cell_length(&upper_aft_bottom, &upper_surface_positions);
+    let lower_trailing_edge_size = start_cell_length(&lower_aft_bottom, &lower_surface_positions);
+    let trailing_edge_size = upper_trailing_edge_size.min(lower_trailing_edge_size);
+    let upper_wake_positions = matched_wake_positions(
+        [&upper_wake, &lower_wake],
+        configuration.mesh.wake_cells,
+        configuration.mesh.wake_grading,
+        trailing_edge_size,
+    )?;
+    let lower_wake_positions = reversed_positions(&upper_wake_positions);
 
     let upper_wake_top = CurveSpec::Line(LineCurve::new(upper_join, upper_outlet_outer));
     let lower_wake_top = CurveSpec::Line(LineCurve::new(lower_outlet_outer, lower_join));
@@ -610,6 +608,149 @@ fn radial_positions(configuration: &MeshConfiguration) -> Result<RadialPositions
     ))
 }
 
+fn start_cell_length(curve: &CurveSpec, positions: &[f64]) -> f64 {
+    curve
+        .point(positions[0])
+        .distance_to(curve.point(positions[1]))
+}
+
+fn end_cell_length(curve: &CurveSpec, positions: &[f64]) -> f64 {
+    let last = positions.len() - 1;
+    curve
+        .point(positions[last - 1])
+        .distance_to(curve.point(positions[last]))
+}
+
+fn matched_wake_positions(
+    curves: [&CurveSpec; 2],
+    cell_count: usize,
+    total_grading: f64,
+    trailing_edge_cell_size: f64,
+) -> Result<Vec<f64>, MeshError> {
+    let configured = graded_positions(cell_count, total_grading, false);
+    let maximum_first_cell_size =
+        MAXIMUM_TRAILING_EDGE_TO_WAKE_SIZE_RATIO * trailing_edge_cell_size;
+    let configured_size = curves
+        .iter()
+        .map(|curve| start_cell_length(curve, &configured))
+        .fold(0.0, f64::max);
+    let configured_growth = configured
+        .windows(3)
+        .map(|positions| (positions[2] - positions[1]) / (positions[1] - positions[0]))
+        .fold(0.0, f64::max);
+    if configured_size <= maximum_first_cell_size
+        && configured_growth <= MAXIMUM_WAKE_ADJACENT_CELL_GROWTH_RATIO
+    {
+        return Ok(configured);
+    }
+
+    let configured_first_parameter = configured[1];
+    let mut lower = 0.0;
+    let mut upper = configured_first_parameter;
+    for _ in 0..80 {
+        let midpoint = f64::midpoint(lower, upper);
+        let size = curves
+            .iter()
+            .map(|curve| curve.point(0.0).distance_to(curve.point(midpoint)))
+            .fold(0.0, f64::max);
+        if size > maximum_first_cell_size {
+            upper = midpoint;
+        } else {
+            lower = midpoint;
+        }
+    }
+    positions_with_first_fraction(cell_count, lower)
+}
+
+fn positions_with_first_fraction(
+    cell_count: usize,
+    first_fraction: f64,
+) -> Result<Vec<f64>, MeshError> {
+    #[allow(clippy::cast_precision_loss)]
+    let uniform_fraction = 1.0 / cell_count as f64;
+    if first_fraction >= uniform_fraction {
+        return Ok(uniform_positions(cell_count));
+    }
+
+    let target_sum = 1.0 / first_fraction;
+    let preferred_maximum_sum = capped_geometric_sum(
+        cell_count,
+        f64::INFINITY,
+        f64::INFINITY,
+        MAXIMUM_WAKE_ADJACENT_CELL_GROWTH_RATIO,
+    );
+    let growth_ratio = if target_sum <= preferred_maximum_sum * (1.0 + 1.0e-12) {
+        MAXIMUM_WAKE_ADJACENT_CELL_GROWTH_RATIO
+    } else {
+        let coarse_maximum_sum = capped_geometric_sum(
+            cell_count,
+            f64::INFINITY,
+            f64::INFINITY,
+            MAXIMUM_COARSE_WAKE_ADJACENT_CELL_GROWTH_RATIO,
+        );
+        if target_sum > coarse_maximum_sum * (1.0 + 1.0e-12) {
+            return Err(MeshError::TopologyError(format!(
+                "{} wake cells cannot match the trailing-edge spacing without exceeding {:.0}% adjacent growth; increase mesh.wakeCells",
+                cell_count,
+                100.0 * (MAXIMUM_COARSE_WAKE_ADJACENT_CELL_GROWTH_RATIO - 1.0)
+            )));
+        }
+
+        let mut lower = MAXIMUM_WAKE_ADJACENT_CELL_GROWTH_RATIO;
+        let mut upper = MAXIMUM_COARSE_WAKE_ADJACENT_CELL_GROWTH_RATIO;
+        for _ in 0..80 {
+            let midpoint = f64::midpoint(lower, upper);
+            let sum = capped_geometric_sum(cell_count, f64::INFINITY, target_sum, midpoint);
+            if sum < target_sum {
+                lower = midpoint;
+            } else {
+                upper = midpoint;
+            }
+        }
+        upper
+    };
+    let mut lower_cap = 1.0;
+    let mut upper_cap = target_sum;
+    for _ in 0..80 {
+        let midpoint = f64::midpoint(lower_cap, upper_cap);
+        if capped_geometric_sum(cell_count, midpoint, target_sum, growth_ratio) < target_sum {
+            lower_cap = midpoint;
+        } else {
+            upper_cap = midpoint;
+        }
+    }
+
+    let cap = f64::midpoint(lower_cap, upper_cap);
+    let mut sizes = Vec::with_capacity(cell_count);
+    let mut size: f64 = 1.0;
+    for _ in 0..cell_count {
+        sizes.push(size.min(cap));
+        size = (size * growth_ratio).min(cap);
+    }
+    Ok(positions_from_sizes(&sizes))
+}
+
+fn capped_geometric_sum(count: usize, cap: f64, limit: f64, growth_ratio: f64) -> f64 {
+    let mut sum = 0.0;
+    let mut value: f64 = 1.0;
+    for _ in 0..count {
+        sum += value.min(cap);
+        if sum >= limit {
+            return sum;
+        }
+        value = (value * growth_ratio).min(cap);
+    }
+    sum
+}
+
+fn reversed_positions(positions: &[f64]) -> Vec<f64> {
+    positions
+        .iter()
+        .rev()
+        .map(|position| 1.0 - position)
+        .collect()
+}
+
 fn graded_positions(cell_count: usize, total_grading: f64, reverse: bool) -> Vec<f64> {
     if cell_count == 1 || (total_grading - 1.0).abs() <= f64::EPSILON {
         return uniform_positions(cell_count);
@@ -625,15 +766,20 @@ fn graded_positions(cell_count: usize, total_grading: f64, reverse: bool) -> Vec
     if reverse {
         sizes.reverse();
     }
+    positions_from_sizes(&sizes)
+}
+
+fn positions_from_sizes(sizes: &[f64]) -> Vec<f64> {
     let total: f64 = sizes.iter().sum();
-    let mut positions = Vec::with_capacity(cell_count + 1);
+    let mut positions = Vec::with_capacity(sizes.len() + 1);
     positions.push(0.0);
     let mut cumulative = 0.0;
-    for size in sizes {
+    for &size in sizes {
         cumulative += size / total;
         positions.push(cumulative);
     }
-    positions[cell_count] = 1.0;
+    let last = positions.len() - 1;
+    positions[last] = 1.0;
     positions
 }
 
@@ -704,7 +850,10 @@ fn concatenate_curves(curves: &[&CurveSpec]) -> Vec<Point2> {
 
 #[cfg(test)]
 mod tests {
-    use super::build_cgrid_topology;
+    use super::{
+        MAXIMUM_TRAILING_EDGE_TO_WAKE_SIZE_RATIO, MAXIMUM_WAKE_ADJACENT_CELL_GROWTH_RATIO,
+        build_cgrid_topology, end_cell_length, positions_with_first_fraction, start_cell_length,
+    };
     use crate::{
         config::WakeAlignment,
         test_support::example_configuration,
@@ -733,6 +882,39 @@ mod tests {
         assert_eq!(topology.interfaces.len(), 7);
         assert_eq!(topology.blocks[4].name, "downstream_wake");
         assert!(topology.wake_half_thickness > 1.0e-5);
+    }
+
+    #[test]
+    fn wake_first_cell_matches_both_trailing_edge_surface_cells() {
+        for finite_trailing_edge in [false, true] {
+            let mut configuration = example_configuration();
+            configuration.airfoil.finite_trailing_edge = finite_trailing_edge;
+            configuration.airfoil.surface_point_count = 401;
+            let topology = build_cgrid_topology(&configuration).expect("valid topology");
+
+            let upper_surface = &topology.blocks[1];
+            let lower_surface = &topology.blocks[2];
+            let upper_wake = &topology.blocks[usize::from(finite_trailing_edge) + 4];
+            let upper_te = end_cell_length(&upper_surface.bottom, &upper_surface.xi_positions);
+            let lower_te = start_cell_length(&lower_surface.bottom, &lower_surface.xi_positions);
+            let wake_first = start_cell_length(&upper_wake.bottom, &upper_wake.xi_positions);
+
+            assert!(wake_first / upper_te <= MAXIMUM_TRAILING_EDGE_TO_WAKE_SIZE_RATIO + 1.0e-9);
+            assert!(wake_first / lower_te <= MAXIMUM_TRAILING_EDGE_TO_WAKE_SIZE_RATIO + 1.0e-9);
+            for positions in upper_wake.xi_positions.windows(3) {
+                let first = positions[1] - positions[0];
+                let second = positions[2] - positions[1];
+                assert!(second / first <= MAXIMUM_WAKE_ADJACENT_CELL_GROWTH_RATIO + 1.0e-9);
+            }
+        }
+    }
+
+    #[test]
+    fn infeasible_wake_transition_requests_more_cells() {
+        let error = positions_with_first_fraction(4, 1.0e-6)
+            .expect_err("four cells cannot span this size range safely");
+
+        assert!(error.to_string().contains("increase mesh.wakeCells"));
     }
 
     #[test]

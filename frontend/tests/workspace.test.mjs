@@ -53,11 +53,13 @@ test('legacy LES configurations infer WRLES and receive new defaults', () => {
   delete legacy.meshIntent;
   delete legacy.wake;
   delete legacy.les.mode;
+  delete legacy.output.fluentFarfieldMode;
 
   const normalized = normalizeMeshConfiguration(legacy);
   assert.equal(normalized.meshIntent, 'WRLES');
   assert.equal(normalized.les.mode, 'WRLES');
   assert.equal(normalized.wake.alignment, 'BLENDED');
+  assert.equal(normalized.output.fluentFarfieldMode, 'VELOCITY_INLET');
 });
 
 test('large Gmsh exports are kept out of the browser string path', () => {

@@ -111,7 +111,7 @@ pub fn export_openfoam_from_generated(
     for (block, corners) in generated.topology.blocks.iter().zip(&compact.block_corners) {
         let front = *corners;
         let back = corners.map(|vertex| vertex + plane_vertex_count);
-        let xi_grading = expansion_ratio(&block.xi_positions)?;
+        let xi_grading = grading_from_positions(&block.xi_positions)?;
         let eta_grading = multi_grading(&generated.topology.radial_grading_sections)?;
         append(
             &mut output,
@@ -131,7 +131,7 @@ pub fn export_openfoam_from_generated(
                 block.ni,
                 block.nj,
                 configuration.mesh.spanwise_cells,
-                scalar(xi_grading),
+                xi_grading,
                 eta_grading,
                 scalar(configuration.mesh.spanwise_grading)
             ),
@@ -423,6 +423,66 @@ fn expansion_ratio(positions: &[f64]) -> Result<f64, MeshError> {
     Ok(last / first)
 }
 
+fn grading_from_positions(positions: &[f64]) -> Result<String, MeshError> {
+    let overall_expansion = expansion_ratio(positions)?;
+    let sizes = positions
+        .windows(2)
+        .map(|pair| pair[1] - pair[0])
+        .collect::<Vec<_>>();
+    if sizes.iter().any(|size| !size.is_finite() || *size <= 0.0) {
+        return Err(MeshError::ExportError(
+            "grading positions are invalid".to_owned(),
+        ));
+    }
+    if sizes.len() == 1 {
+        return Ok(scalar(overall_expansion));
+    }
+
+    let first_ratio = sizes[1] / sizes[0];
+    if sizes
+        .windows(2)
+        .all(|pair| approximately_equal(pair[1] / pair[0], first_ratio))
+    {
+        return Ok(scalar(overall_expansion));
+    }
+
+    let total_size = sizes.iter().sum::<f64>();
+    #[allow(clippy::cast_precision_loss)]
+    let total_cells = sizes.len() as f64;
+    let mut sections = Vec::new();
+    let mut start = 0;
+    while start < sizes.len() {
+        let mut end = (start + 1).min(sizes.len());
+        if start + 1 < sizes.len() {
+            let section_ratio = sizes[start + 1] / sizes[start];
+            end = start + 2;
+            while end < sizes.len()
+                && approximately_equal(sizes[end] / sizes[end - 1], section_ratio)
+            {
+                end += 1;
+            }
+        }
+
+        let section_size = sizes[start..end].iter().sum::<f64>();
+        #[allow(clippy::cast_precision_loss)]
+        let division_fraction = (end - start) as f64 / total_cells;
+        let section_expansion = sizes[end - 1] / sizes[start];
+        sections.push(format!(
+            "({} {} {})",
+            scalar(section_size / total_size),
+            scalar(division_fraction),
+            scalar(section_expansion)
+        ));
+        start = end;
+    }
+
+    Ok(format!("({})", sections.join(" ")))
+}
+
+fn approximately_equal(left: f64, right: f64) -> bool {
+    (left - right).abs() <= 1.0e-10 * left.abs().max(right.abs()).max(1.0)
+}
+
 fn multi_grading(sections: &[GradingSection]) -> Result<String, MeshError> {
     if sections.is_empty()
         || sections.iter().any(|section| {
@@ -515,7 +575,7 @@ fn append(output: &mut String, arguments: std::fmt::Arguments<'_>) -> Result<(),
 mod tests {
     use std::f64::consts::FRAC_PI_2;
 
-    use super::{export_openfoam, write_curved_edges};
+    use super::{export_openfoam, grading_from_positions, write_curved_edges};
     use crate::{
         config::{FrontBackPatchType, PatchType},
         geometry::Point2,
@@ -552,6 +612,17 @@ mod tests {
         let first = export_openfoam(&configuration).expect("first export");
         let second = export_openfoam(&configuration).expect("second export");
         assert_eq!(first, second);
+    }
+
+    #[test]
+    fn piecewise_positions_become_exact_multigrading_sections() {
+        let grading =
+            grading_from_positions(&[0.0, 0.1, 0.3, 0.65, 1.0]).expect("valid piecewise grading");
+        assert_eq!(
+            grading,
+            "((3.000000000000000e-1 5.000000000000000e-1 2.000000000000000e0) \
+             (7.000000000000000e-1 5.000000000000000e-1 9.999999999999999e-1))"
+        );
     }
 
     #[test]

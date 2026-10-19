@@ -126,12 +126,16 @@ export interface BoundaryConfiguration {
 }
 
 export type GmshVersion = '2.2' | '4.1';
+export type FluentFarfieldMode =
+  | 'VELOCITY_INLET'
+  | 'PRESSURE_FAR_FIELD';
 
 export interface OutputConfiguration {
   writeOpenfoam: boolean;
   writeGmsh: boolean;
   writeGeometryJson: boolean;
   gmshVersion: GmshVersion;
+  fluentFarfieldMode: FluentFarfieldMode;
 }
 
 export interface MeshConfiguration {

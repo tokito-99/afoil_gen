@@ -49,17 +49,17 @@ target/release/mesh-cli fluent examples/naca2412-rans.json \
 ```
 
 The default `output.fluentFarfieldMode` is `VELOCITY_INLET`. Fluent receives
-the curved C boundary and both upper/lower outer legs as velocity inlets, the
-downstream cut as a pressure outlet, and the airfoil as a wall. Apply the same
-freestream and turbulence quantities to all three inlet zones. Because the
-generator rotates the airfoil geometry, use a horizontal velocity vector and
-do not apply the angle of attack again in the inlet direction.
+the curved C boundary as a velocity inlet, both upper/lower outer legs as
+symmetry boundaries, the downstream cut as a pressure outlet, and the airfoil
+as a wall. Because the generator rotates the airfoil geometry, use a horizontal
+velocity vector and do not apply the angle of attack again in the inlet
+direction.
 
-In Fluent, set **Velocity Specification Method** to **Components** on `inlet`,
-`upper_farfield`, and `lower_farfield`. For a 20 m/s case, enter an absolute
-velocity of `X = 20 m/s` and `Y = 0 m/s` on all three zones. Do not select
-**Magnitude, Normal to Boundary**: that setting drives flow radially through
-the curved and straight outer boundaries. Reinitialize the solution after
+In Fluent, set **Velocity Specification Method** to **Components** on `inlet`.
+For a 20 m/s case, enter an absolute velocity of `X = 20 m/s` and `Y = 0 m/s`.
+Do not select **Magnitude, Normal to Boundary**: that setting drives flow
+radially through the curved boundary. Confirm that `upper_farfield` and
+`lower_farfield` imported as symmetry zones. Reinitialize the solution after
 changing boundary types or velocity directions so an old, invalid field is not
 retained.
 

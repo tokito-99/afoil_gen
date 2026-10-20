@@ -512,12 +512,14 @@ const fn patch_zone_type(
         PatchType::Patch => match role {
             BoundaryRole::Outlet => (5, "pressure-outlet"),
             BoundaryRole::Airfoil => (3, "wall"),
-            BoundaryRole::Inlet | BoundaryRole::UpperFarfield | BoundaryRole::LowerFarfield => {
-                match farfield_mode {
-                    FluentFarfieldMode::VelocityInlet => (10, "velocity-inlet"),
-                    FluentFarfieldMode::PressureFarField => (9, "pressure-far-field"),
-                }
-            }
+            BoundaryRole::Inlet => match farfield_mode {
+                FluentFarfieldMode::VelocityInlet => (10, "velocity-inlet"),
+                FluentFarfieldMode::PressureFarField => (9, "pressure-far-field"),
+            },
+            BoundaryRole::UpperFarfield | BoundaryRole::LowerFarfield => match farfield_mode {
+                FluentFarfieldMode::VelocityInlet => (7, "symmetry"),
+                FluentFarfieldMode::PressureFarField => (9, "pressure-far-field"),
+            },
         },
     }
 }
@@ -616,8 +618,9 @@ mod tests {
         assert!(first.contains(" 1 3))"));
         assert!(first.contains(" wall airfoil_wall 1)())"));
         assert!(first.contains(" velocity-inlet inlet 1)())"));
-        assert!(first.contains(" velocity-inlet upper_farfield 1)())"));
-        assert!(first.contains(" velocity-inlet lower_farfield 1)())"));
+        assert!(first.contains(" symmetry upper_farfield 1)())"));
+        assert!(first.contains(" symmetry lower_farfield 1)())"));
+        assert_eq!(first.matches(" velocity-inlet ").count(), 1);
         assert!(!first.contains(" pressure-far-field "));
         assert!(!first.contains("(18 "));
     }

@@ -284,18 +284,18 @@ pub struct OutputConfiguration {
     pub write_gmsh: bool,
     pub write_geometry_json: bool,
     pub gmsh_version: GmshVersion,
-    /// Fluent zone types assigned to the outer C-grid boundary.
+    /// Fluent boundary-condition family assigned to the outer C-grid boundary.
     #[serde(default)]
     pub fluent_farfield_mode: FluentFarfieldMode,
 }
 
-/// Fluent boundary-condition family used on the curved C boundary and its
-/// upper/lower downstream legs. The downstream cut remains a pressure outlet.
+/// Fluent boundary-condition family used on the outer C-grid boundary. The
+/// downstream cut remains a pressure outlet in both modes.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum FluentFarfieldMode {
-    /// Low-speed, constant-density setup: all non-outlet outer faces are
-    /// velocity inlets carrying the freestream condition.
+    /// Low-speed, constant-density setup: the curved C boundary is a velocity
+    /// inlet and the upper/lower downstream legs are symmetry boundaries.
     #[default]
     VelocityInlet,
     /// Compressible setup: all non-outlet outer faces are pressure far-fields.

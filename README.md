@@ -68,9 +68,9 @@ target/release/mesh-cli fluent examples/naca0012-student-wrles.json \
   --output examples/generated/naca0012-wrles.msh
 ```
 
-Fluent exports default to a low-speed outer boundary: the complete C boundary
-and its upper/lower legs are `velocity-inlet`, the downstream cut is
-`pressure-outlet`, and the airfoil is `wall`. Set
+Fluent exports default to a low-speed external-flow boundary: the curved C
+boundary is `velocity-inlet`, its upper/lower legs are `symmetry`, the
+downstream cut is `pressure-outlet`, and the airfoil is `wall`. Set
 `output.fluentFarfieldMode` to `PRESSURE_FAR_FIELD` only for an ideal-gas
 compressible setup.
 

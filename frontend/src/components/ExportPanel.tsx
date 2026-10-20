@@ -260,7 +260,7 @@ export function ExportPanel(): ReactNode {
             value={configuration.output.fluentFarfieldMode}
           >
             <option value="VELOCITY_INLET">
-              Low-speed · velocity inlet
+              Low-speed · inlet + symmetry
             </option>
             <option value="PRESSURE_FAR_FIELD">
               Compressible · pressure far-field
